@@ -1,5 +1,7 @@
 # FlipFocus IoT - Physical Productivity Tracker
 
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/scriptsledge/flipfocus)
+
 ## Project Overview
 FlipFocus is a physical cube designed to track focus time without phone distractions. By flipping the cube to a specific face, an ESP32 detects the orientation via an MPU6050 accelerometer and syncs the task timer to a cloud dashboard.
 
@@ -17,3 +19,4 @@ FlipFocus is a physical cube designed to track focus time without phone distract
 ## Setup
 1. **Firmware**: Open `firmware/` in PlatformIO or Arduino IDE.
 2. **Web**: Run a local server in `web/` or push to GitHub for automatic Vercel deployment.
+   - *Tip*: On Vercel, set the **Root Directory** to `web/`.
