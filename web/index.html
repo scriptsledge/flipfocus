@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlipFocus Developer Blueprint</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {
+background-color: #0f172a;
+color: #f8fafc;
+font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+.chart-container {
+position: relative;
+width: 100%;
+max-width: 600px;
+margin-left: auto;
+margin-right: auto;
+height: 300px;
+max-height: 350px;
+}
+.card {
+background-color: #1e293b;
+border-radius: 12px;
+padding: 24px;
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+border: 1px solid #334155;
+}
+.code-block {
+background-color: #020617;
+padding: 16px;
+border-radius: 8px;
+font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+font-size: 0.85rem;
+color: #38bdf8;
+overflow-x: auto;
+}
+</style>
+</head>
+<body class="p-4 md:p-10">
+
+<div class="max-w-6xl mx-auto">
+<header class="mb-12 text-center">
+<h1 class="text-4xl md:text-6xl font-black text-sky-400 mb-4">FlipFocus IoT</h1>
+<p class="text-lg text-slate-400">A physical cube to track focus time without using a phone.</p>
+</header>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+<div class="card">
+<h2 class="text-2xl font-bold mb-4 text-emerald-400">Project Goal</h2>
+<p class="text-slate-300 leading-relaxed">
+Phones are distracting. FlipFocus is a physical cube. When you flip a specific side up, it starts a timer for that task on your dashboard. It uses an ESP32 and an accelerometer to detect which side is facing up.
+</p>
+<div class="mt-6 space-y-3 text-sm">
+<div class="flex items-center gap-2">
+<span class="text-emerald-400">●</span> <span>Physical interaction only</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-emerald-400">●</span> <span>Real-time cloud sync</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-emerald-400">●</span> <span>Long battery life</span>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h2 class="text-2xl font-bold mb-4 text-sky-400">Cost Breakdown</h2>
+<div class="chart-container">
+<canvas id="costChart"></canvas>
+</div>
+</div>
+</div>
+
+<div class="card mb-12">
+<h2 class="text-2xl font-bold mb-8 text-indigo-400">Development Steps</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="p-4 bg-slate-800 rounded-lg">
+<div class="text-2xl mb-2">🛠️</div>
+<h3 class="font-bold mb-2">Step 1: Build</h3>
+<p class="text-xs text-slate-400">Connect MPU6050 to ESP32 via I2C pins. Add the battery and charging module.</p>
+</div>
+<div class="p-4 bg-slate-800 rounded-lg">
+<div class="text-2xl mb-2">🧠</div>
+<h3 class="font-bold mb-2">Step 2: Logic</h3>
+<p class="text-xs text-slate-400">Write code to read gravity data. Map X, Y, Z values to 6 different cube faces.</p>
+</div>
+<div class="p-4 bg-slate-800 rounded-lg">
+<div class="text-2xl mb-2">🌐</div>
+<h3 class="font-bold mb-2">Step 3: Connect</h3>
+<p class="text-xs text-slate-400">Setup WiFi on ESP32. Send the "Face ID" to Blynk or a custom server.</p>
+</div>
+<div class="p-4 bg-slate-800 rounded-lg">
+<div class="text-2xl mb-2">📈</div>
+<h3 class="font-bold mb-2">Step 4: UI</h3>
+<p class="text-xs text-slate-400">Create the mobile app dashboard to show active timers and history.</p>
+</div>
+</div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+<div class="card lg:col-span-1">
+<h2 class="text-2xl font-bold mb-6 text-pink-400">Component List</h2>
+<ul class="space-y-4 text-sm">
+<li class="flex justify-between border-b border-slate-700 pb-2">
+<span>ESP32 DevKit</span> <span class="text-pink-400 font-mono">₹450</span>
+</li>
+<li class="flex justify-between border-b border-slate-700 pb-2">
+<span>MPU6050 Sensor</span> <span class="text-pink-400 font-mono">₹180</span>
+</li>
+<li class="flex justify-between border-b border-slate-700 pb-2">
+<span>Li-ion Battery</span> <span class="text-pink-400 font-mono">₹200</span>
+</li>
+<li class="flex justify-between border-b border-slate-700 pb-2">
+<span>TP4056 Charger</span> <span class="text-pink-400 font-mono">₹40</span>
+</li>
+<li class="flex justify-between border-b border-slate-700 pb-2">
+<span>RGB LEDs</span> <span class="text-pink-400 font-mono">₹100</span>
+</li>
+<li class="flex justify-between pt-2 font-bold text-white">
+<span>Total Budget</span> <span>₹970</span>
+</li>
+</ul>
+</div>
+
+<div class="card lg:col-span-2">
+<h2 class="text-2xl font-bold mb-6 text-sky-400">Core Detection Logic</h2>
+<p class="text-sm text-slate-400 mb-4">This code runs on the ESP32 to find which side is up:</p>
+<div class="code-block">
+void checkOrientation() {<br>
+&nbsp;&nbsp;sensors_event_t a, g, t;<br>
+&nbsp;&nbsp;mpu.getEvent(&a, &g, &t);<br><br>
+&nbsp;&nbsp;if (a.acceleration.z > 9.5) state = "SIDE 1: WORK";<br>
+&nbsp;&nbsp;else if (a.acceleration.z < -9.5) state = "SIDE 2: REST";<br>
+&nbsp;&nbsp;else if (a.acceleration.y > 9.5) state = "SIDE 3: CODE";<br>
+&nbsp;&nbsp;else if (a.acceleration.y < -9.5) state = "SIDE 4: READ";<br>
+&nbsp;&nbsp;else if (a.acceleration.x > 9.5) state = "SIDE 5: DRAW";<br>
+&nbsp;&nbsp;else if (a.acceleration.x < -9.5) state = "SIDE 6: MAIL";<br><br>
+&nbsp;&nbsp;updateCloud(state);<br>
+}
+</div>
+</div>
+</div>
+
+<div class="card mb-12">
+<h2 class="text-2xl font-bold mb-6 text-center text-yellow-400">Project Timeline (4 Weeks)</h2>
+<div class="flex flex-col md:flex-row justify-between items-start gap-4">
+<div class="flex-1 p-4 bg-slate-900/50 rounded-lg border-t-4 border-sky-400">
+<h4 class="font-bold text-sky-400 mb-1">Week 1</h4>
+<p class="text-xs text-slate-400">Wiring and basic sensor reading.</p>
+</div>
+<div class="flex-1 p-4 bg-slate-900/50 rounded-lg border-t-4 border-indigo-400">
+<h4 class="font-bold text-indigo-400 mb-1">Week 2</h4>
+<p class="text-xs text-slate-400">WiFi and Cloud data sync.</p>
+</div>
+<div class="flex-1 p-4 bg-slate-900/50 rounded-lg border-t-4 border-purple-400">
+<h4 class="font-bold text-purple-400 mb-1">Week 3</h4>
+<p class="text-xs text-slate-400">Mobile app dashboard design.</p>
+</div>
+<div class="flex-1 p-4 bg-slate-900/50 rounded-lg border-t-4 border-emerald-400">
+<h4 class="font-bold text-emerald-400 mb-1">Week 4</h4>
+<p class="text-xs text-slate-400">3D printing case and final test.</p>
+</div>
+</div>
+</div>
+
+<footer class="text-center text-slate-500 text-xs py-10">
+FlipFocus IoT Team Blueprint . Version 1.0
+</footer>
+</div>
+
+<script>
+// Chart.js Setup
+const setupCharts = () => {
+    const ctx = document.getElementById('costChart').getContext('2d');
+    
+    // Label wrapping logic: ensures labels > 16 chars are split into arrays
+    const labelsRaw = ["Microcontroller (ESP32)", "Motion Sensor (MPU6050)", "Power and Battery", "Case and Lights"];
+    const labelsWrapped = labelsRaw.map(label => {
+        if (label.length <= 16) return label;
+        const words = label.split(' ');
+        const result = [];
+        let currentLine = "";
+        words.forEach(word => {
+            if ((currentLine + word).length > 16) {
+                result.push(currentLine.trim());
+                currentLine = word + " ";
+            } else {
+                currentLine += word + " ";
+            }
+        });
+        result.push(currentLine.trim());
+        return result;
+    });
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labelsWrapped,
+            datasets: [{
+                data: [450, 180, 240, 100],
+                backgroundColor: ['#38bdf8', '#10b981', '#6366f1', '#f472b6'],
+                borderColor: '#1e293b',
+                borderWidth: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { color: '#94a3b8', font: { size: 11, weight: '600' }, padding: 15 }
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            const item = tooltipItems[0];
+                            let label = item.chart.data.labels[item.dataIndex];
+                            // Join array labels with a space for the tooltip title
+                            return Array.isArray(label) ? label.join(' ') : label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+};
+
+window.onload = setupCharts;
+</script>
+
+</body>
+</html>
