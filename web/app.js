@@ -1,5 +1,5 @@
 const firebaseConfig = {
-    apiKey: "__FIREBASE_API_KEY__",
+    apiKey: "AIzaSyAlgqjJUeTN5f57PpcPckKxdOsLXLnXfzk",
     authDomain: "flipfocus-iot.firebaseapp.com",
     databaseURL: "https://flipfocus-iot-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "flipfocus-iot",
@@ -15,12 +15,6 @@ let currentListenerRef = null;
 
 // Ensure we have an identity before trying to read data
 function initializeAuth() {
-    if (firebaseConfig.apiKey === "__FIREBASE_API_KEY__") {
-        console.error("CRITICAL ERROR: Firebase API Key is missing. Check your Vercel Environment Variables!");
-        document.getElementById('status-text').innerHTML = '❌ <strong>Configuration Error</strong> (Missing API Key)';
-        return;
-    }
-
     firebase.auth().signInAnonymously()
         .then(() => {
             console.log("Authenticated anonymously. Ready to sync.");
