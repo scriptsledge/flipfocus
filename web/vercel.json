@@ -1,5 +1,0 @@
-{
-  "buildCommand": "bash build.sh",
-  "outputDirectory": ".",
-  "installCommand": "echo 'No install needed'"
-}
