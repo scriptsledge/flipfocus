@@ -10,19 +10,21 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+// Explicitly pass the URL to ensure it routes to the Singapore (asia-southeast1) region
+const database = firebase.database("https://flipfocus-iot-default-rtdb.asia-southeast1.firebasedatabase.app");
 let currentListenerRef = null;
 
 // Ensure we have an identity before trying to read data
 function initializeAuth() {
+    console.log("Attempting Anonymous Auth...");
     firebase.auth().signInAnonymously()
         .then(() => {
-            console.log("Authenticated anonymously. Ready to sync.");
+            console.log("✅ Authenticated anonymously. Ready to sync.");
             viewModeChanged();
         })
         .catch((error) => {
-            console.error("Authentication failed:", error.code, error.message);
-            document.getElementById('status-text').innerHTML = '❌ <strong>Auth Error</strong> (Check Firebase Rules)';
+            console.error("❌ Authentication failed:", error.code, error.message);
+            document.getElementById('status-text').innerHTML = '❌ <strong>Auth Error</strong> (' + error.code + ')';
         });
 }
 
