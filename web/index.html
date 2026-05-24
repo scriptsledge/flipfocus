@@ -1,237 +1,697 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FlipFocus Developer Blueprint</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-body {
-background-color: #0f172a;
-color: #f8fafc;
-font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-}
-.chart-container {
-position: relative;
-width: 100%;
-max-width: 600px;
-margin-left: auto;
-margin-right: auto;
-height: 300px;
-max-height: 350px;
-}
-.card {
-background-color: #1e293b;
-border-radius: 12px;
-padding: 24px;
-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-border: 1px solid #334155;
-}
-.code-block {
-background-color: #020617;
-padding: 16px;
-border-radius: 8px;
-font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-font-size: 0.85rem;
-color: #38bdf8;
-overflow-x: auto;
-}
-</style>
-</head>
-<body class="p-4 md:p-10">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="FlipFocus Analytics Hub - Track study sessions, exam prep, coding time, and breaks in real-time synced with ESP32 IoT hardware.">
+    <title>FlipFocus Hub - Real-Time Study Analytics</title>
 
-<div class="max-w-6xl mx-auto">
-<header class="mb-12 text-center">
-<h1 class="text-4xl md:text-6xl font-black text-sky-400 mb-4">FlipFocus IoT</h1>
-<p class="text-lg text-slate-400">A physical cube to track focus time without using a phone.</p>
-</header>
+    <!-- Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-<div class="card">
-<h2 class="text-2xl font-bold mb-4 text-emerald-400">Project Goal</h2>
-<p class="text-slate-300 leading-relaxed">
-Phones are distracting. FlipFocus is a physical cube. When you flip a specific side up, it starts a timer for that task on your dashboard. It uses an ESP32 and an accelerometer to detect which side is facing up.
-</p>
-<div class="mt-6 space-y-3 text-sm">
-<div class="flex items-center gap-2">
-<span class="text-emerald-400">●</span> <span>Physical interaction only</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="text-emerald-400">●</span> <span>Real-time cloud sync</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="text-emerald-400">●</span> <span>Long battery life</span>
-</div>
-</div>
-</div>
+    <style>
+        :root {
+            --bg-dark: #070a13;
+            --card-bg: rgba(15, 23, 42, 0.45);
+            --card-border: rgba(255, 255, 255, 0.05);
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --primary: #38bdf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
 
-<div class="card">
-<h2 class="text-2xl font-bold mb-4 text-sky-400">Cost Breakdown</h2>
-<div class="chart-container">
-<canvas id="costChart"></canvas>
-</div>
-</div>
-</div>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
 
-<div class="card mb-12">
-<h2 class="text-2xl font-bold mb-8 text-indigo-400">Development Steps</h2>
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-<div class="p-4 bg-slate-800 rounded-lg">
-<div class="text-2xl mb-2">🛠️</div>
-<h3 class="font-bold mb-2">Step 1: Build</h3>
-<p class="text-xs text-slate-400">Connect MPU6050 to ESP32 via I2C pins. Add the battery and charging module.</p>
-</div>
-<div class="p-4 bg-slate-800 rounded-lg">
-<div class="text-2xl mb-2">🧠</div>
-<h3 class="font-bold mb-2">Step 2: Logic</h3>
-<p class="text-xs text-slate-400">Write code to read gravity data. Map X, Y, Z values to 6 different cube faces.</p>
-</div>
-<div class="p-4 bg-slate-800 rounded-lg">
-<div class="text-2xl mb-2">🌐</div>
-<h3 class="font-bold mb-2">Step 3: Connect</h3>
-<p class="text-xs text-slate-400">Setup WiFi on ESP32. Send the "Face ID" to Blynk or a custom server.</p>
-</div>
-<div class="p-4 bg-slate-800 rounded-lg">
-<div class="text-2xl mb-2">📈</div>
-<h3 class="font-bold mb-2">Step 4: UI</h3>
-<p class="text-xs text-slate-400">Create the mobile app dashboard to show active timers and history.</p>
-</div>
-</div>
-</div>
+        body {
+            background-color: var(--bg-dark);
+            background-image:
+                radial-gradient(at 10% 10%, rgba(56, 189, 248, 0.08) 0px, transparent 40%),
+                radial-gradient(at 90% 90%, rgba(16, 185, 129, 0.05) 0px, transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 32px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-<div class="card lg:col-span-1">
-<h2 class="text-2xl font-bold mb-6 text-pink-400">Component List</h2>
-<ul class="space-y-4 text-sm">
-<li class="flex justify-between border-b border-slate-700 pb-2">
-<span>ESP32 DevKit</span> <span class="text-pink-400 font-mono">₹450</span>
-</li>
-<li class="flex justify-between border-b border-slate-700 pb-2">
-<span>MPU6050 Sensor</span> <span class="text-pink-400 font-mono">₹180</span>
-</li>
-<li class="flex justify-between border-b border-slate-700 pb-2">
-<span>Li-ion Battery</span> <span class="text-pink-400 font-mono">₹200</span>
-</li>
-<li class="flex justify-between border-b border-slate-700 pb-2">
-<span>TP4056 Charger</span> <span class="text-pink-400 font-mono">₹40</span>
-</li>
-<li class="flex justify-between border-b border-slate-700 pb-2">
-<span>RGB LEDs</span> <span class="text-pink-400 font-mono">₹100</span>
-</li>
-<li class="flex justify-between pt-2 font-bold text-white">
-<span>Total Budget</span> <span>₹970</span>
-</li>
-</ul>
-</div>
+        /* Subtle Blueprint grid overlay */
+        body::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(56, 189, 248, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, 0.02) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: -1;
+        }
 
-<div class="card lg:col-span-2">
-<h2 class="text-2xl font-bold mb-6 text-sky-400">Core Detection Logic</h2>
-<p class="text-sm text-slate-400 mb-4">This code runs on the ESP32 to find which side is up:</p>
-<div class="code-block">
-void checkOrientation() {<br>
-&nbsp;&nbsp;sensors_event_t a, g, t;<br>
-&nbsp;&nbsp;mpu.getEvent(&a, &g, &t);<br><br>
-&nbsp;&nbsp;if (a.acceleration.z > 9.5) state = "SIDE 1: WORK";<br>
-&nbsp;&nbsp;else if (a.acceleration.z < -9.5) state = "SIDE 2: REST";<br>
-&nbsp;&nbsp;else if (a.acceleration.y > 9.5) state = "SIDE 3: CODE";<br>
-&nbsp;&nbsp;else if (a.acceleration.y < -9.5) state = "SIDE 4: READ";<br>
-&nbsp;&nbsp;else if (a.acceleration.x > 9.5) state = "SIDE 5: DRAW";<br>
-&nbsp;&nbsp;else if (a.acceleration.x < -9.5) state = "SIDE 6: MAIL";<br><br>
-&nbsp;&nbsp;updateCloud(state);<br>
-}
-</div>
-</div>
-</div>
+        .container {
+            width: 100%;
+            max-width: 580px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-<div class="card mb-12">
-<h2 class="text-2xl font-bold mb-6 text-center text-yellow-400">Project Timeline (4 Weeks)</h2>
-<div class="flex flex-col md:flex-row justify-between items-start gap-4">
-<div class="flex-1 p-4 bg-slate-900/50 rounded-lg border-t-4 border-sky-400">
-<h4 class="font-bold text-sky-400 mb-1">Week 1</h4>
-<p class="text-xs text-slate-400">Wiring and basic sensor reading.</p>
-</div>
-<div class="flex-1 p-4 bg-slate-900/50 rounded-lg border-t-4 border-indigo-400">
-<h4 class="font-bold text-indigo-400 mb-1">Week 2</h4>
-<p class="text-xs text-slate-400">WiFi and Cloud data sync.</p>
-</div>
-<div class="flex-1 p-4 bg-slate-900/50 rounded-lg border-t-4 border-purple-400">
-<h4 class="font-bold text-purple-400 mb-1">Week 3</h4>
-<p class="text-xs text-slate-400">Mobile app dashboard design.</p>
-</div>
-<div class="flex-1 p-4 bg-slate-900/50 rounded-lg border-t-4 border-emerald-400">
-<h4 class="font-bold text-emerald-400 mb-1">Week 4</h4>
-<p class="text-xs text-slate-400">3D printing case and final test.</p>
-</div>
-</div>
-</div>
+        header {
+            text-align: center;
+            margin-bottom: 12px;
+        }
 
-<footer class="text-center text-slate-500 text-xs py-10">
-FlipFocus IoT Team Blueprint . Version 1.0
-</footer>
-</div>
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            background: rgba(56, 189, 248, 0.05);
+            border: 1px solid rgba(56, 189, 248, 0.1);
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
 
-<script>
-// Chart.js Setup
-const setupCharts = () => {
-    const ctx = document.getElementById('costChart').getContext('2d');
-    
-    // Label wrapping logic: ensures labels > 16 chars are split into arrays
-    const labelsRaw = ["Microcontroller (ESP32)", "Motion Sensor (MPU6050)", "Power and Battery", "Case and Lights"];
-    const labelsWrapped = labelsRaw.map(label => {
-        if (label.length <= 16) return label;
-        const words = label.split(' ');
-        const result = [];
-        let currentLine = "";
-        words.forEach(word => {
-            if ((currentLine + word).length > 16) {
-                result.push(currentLine.trim());
-                currentLine = word + " ";
-            } else {
-                currentLine += word + " ";
+        .brand-logo {
+            width: 18px;
+            height: 18px;
+            color: var(--primary);
+        }
+
+        .brand-name {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            color: var(--primary);
+        }
+
+        .title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #f8fafc 40%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-weight: 400;
+        }
+
+        .controls-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            padding: 12px 18px;
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            gap: 12px;
+        }
+
+        .status-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: var(--text-main);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success);
+            border-radius: 50%;
+            position: relative;
+            flex-shrink: 0;
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        /* Pulsing green ring when active/live */
+        .status-dot::after {
+            content: "";
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 2px solid var(--success);
+            animation: live-pulse 2s infinite ease-in-out;
+            opacity: 0;
+        }
+
+        @keyframes live-pulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.8;
             }
-        });
-        result.push(currentLine.trim());
-        return result;
-    });
 
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: labelsWrapped,
-            datasets: [{
-                data: [450, 180, 240, 100],
-                backgroundColor: ['#38bdf8', '#10b981', '#6366f1', '#f472b6'],
-                borderColor: '#1e293b',
-                borderWidth: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '70%',
-            plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { color: '#94a3b8', font: { size: 11, weight: '600' }, padding: 15 }
-                },
-                tooltip: {
-                    callbacks: {
-                        title: function(tooltipItems) {
-                            const item = tooltipItems[0];
-                            let label = item.chart.data.labels[item.dataIndex];
-                            // Join array labels with a space for the tooltip title
-                            return Array.isArray(label) ? label.join(' ') : label;
-                        }
-                    }
-                }
+            100% {
+                transform: scale(2.2);
+                opacity: 0;
             }
         }
-    });
-};
 
-window.onload = setupCharts;
-</script>
+        .status-dot.historical {
+            background-color: var(--warning);
+            box-shadow: 0 0 8px var(--warning);
+        }
 
+        .status-dot.historical::after {
+            display: none;
+        }
+
+        .dropdown-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dropdown-container label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .select-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        select {
+            background: #0b0f19;
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            padding: 6px 30px 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15);
+        }
+
+        .select-icon {
+            position: absolute;
+            right: 10px;
+            width: 12px;
+            height: 12px;
+            pointer-events: none;
+            color: var(--text-muted);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 20px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 130px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .icon-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(56, 189, 248, 0.06);
+            color: var(--primary);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .icon-wrapper.break-icon {
+            background: rgba(16, 185, 129, 0.06);
+            color: var(--success);
+        }
+
+        .icon-wrapper svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .card h3 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+
+        .time-display {
+            display: flex;
+            align-items: baseline;
+            margin-top: auto;
+        }
+
+        .time-display .val {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .time-display .lbl {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-left: 2px;
+            margin-right: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .time-display .lbl:last-child {
+            margin-right: 0;
+        }
+
+        /* Active Card glow states */
+        .active-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: var(--primary);
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            padding: 2px 8px;
+            border-radius: 999px;
+            display: none;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .active-badge::before {
+            content: "";
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: inline-block;
+            animation: active-dot-pulse 1s infinite alternate;
+        }
+
+        @keyframes active-dot-pulse {
+            from {
+                opacity: 0.4;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .card.active {
+            border-color: rgba(56, 189, 248, 0.35);
+            background: rgba(15, 23, 42, 0.7);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px -10px rgba(56, 189, 248, 0.15);
+        }
+
+        .card.active h3 {
+            color: var(--text-main);
+        }
+
+        .card.active .active-badge {
+            display: flex;
+        }
+
+        .card.active .icon-wrapper.focus-icon {
+            background: var(--primary);
+            color: #0b0f19;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        }
+
+        .card.active .icon-wrapper.break-icon {
+            background: var(--success);
+            color: #0b0f19;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 16px;
+            padding: 12px 0;
+        }
+
+        .footer-text {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 480px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .container {
+                gap: 16px;
+            }
+
+            .title {
+                font-size: 1.8rem;
+            }
+
+            .controls-panel {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 14px;
+                gap: 14px;
+            }
+
+            .status-banner {
+                justify-content: center;
+            }
+
+            .dropdown-container {
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            .select-wrapper {
+                flex-grow: 1;
+            }
+
+            select {
+                width: 100%;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .card {
+                padding: 16px;
+                min-height: 110px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Header Section -->
+        <header>
+            <div class="brand">
+                <!-- Geometric Logo -->
+                <svg class="brand-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
+                    <path d="M7 12h10" stroke-linecap="round"></path>
+                    <path d="M12 7v10" stroke-linecap="round"></path>
+                </svg>
+                <span class="brand-name">FLIPFOCUS</span>
+            </div>
+            <h1 class="title">Analytics Hub</h1>
+            <p class="subtitle">Focus Session Tracker & Historical Performance Logs</p>
+        </header>
+
+        <!-- Dynamic Controls -->
+        <main>
+            <div class="controls-panel">
+                <div class="status-banner">
+                    <div class="status-dot" id="status-indicator"></div>
+                    <span id="status-text">Mode: <strong>Live Tracking Stream</strong></span>
+                </div>
+
+                <div class="dropdown-container">
+                    <label for="time-frame">View</label>
+                    <div class="select-wrapper">
+                        <select id="time-frame" onchange="viewModeChanged()">
+                            <option value="live">🔴 Live Stream (Today)</option>
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                            <option value="Sunday">Sunday</option>
+                        </select>
+                        <!-- Chevron icon -->
+                        <svg class="select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="grid">
+                <!-- Card 1: Assignment Work -->
+                <div class="card" id="card-1">
+                    <span class="active-badge">ACTIVE</span>
+                    <div class="card-header">
+                        <div class="icon-wrapper focus-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2">
+                                </path>
+                                <rect x="9" y="3" width="6" height="4" rx="1"></rect>
+                            </svg>
+                        </div>
+                        <h3>Assignment Work</h3>
+                    </div>
+                    <div class="time-display" id="time-1">
+                        <span class="val">0</span><span class="lbl">s</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Exam Prep -->
+                <div class="card" id="card-2">
+                    <span class="active-badge">ACTIVE</span>
+                    <div class="card-header">
+                        <div class="icon-wrapper focus-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                                </path>
+                            </svg>
+                        </div>
+                        <h3>Exam Prep</h3>
+                    </div>
+                    <div class="time-display" id="time-2">
+                        <span class="val">0</span><span class="lbl">s</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: Core Coding -->
+                <div class="card" id="card-3">
+                    <span class="active-badge">ACTIVE</span>
+                    <div class="card-header">
+                        <div class="icon-wrapper focus-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="16 18 22 12 16 6"></polyline>
+                                <polyline points="8 6 2 12 8 18"></polyline>
+                            </svg>
+                        </div>
+                        <h3>Core Coding</h3>
+                    </div>
+                    <div class="time-display" id="time-3">
+                        <span class="val">0</span><span class="lbl">s</span>
+                    </div>
+                </div>
+
+                <!-- Card 4: Total Break -->
+                <div class="card" id="card-4">
+                    <span class="active-badge">ACTIVE</span>
+                    <div class="card-header">
+                        <div class="icon-wrapper break-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                                <line x1="6" y1="1" x2="6" y2="4"></line>
+                                <line x1="10" y1="1" x2="10" y2="4"></line>
+                                <line x1="14" y1="1" x2="14" y2="4"></line>
+                            </svg>
+                        </div>
+                        <h3>Total Break</h3>
+                    </div>
+                    <div class="time-display" id="time-4">
+                        <span class="val">0</span><span class="lbl">s</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer Section -->
+        <footer>
+            <p class="footer-text">FlipFocus IoT System • ₹1000 Hardware Target</p>
+        </footer>
+    </div>
+
+    <!-- Firebase Integration -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "PLACEHOLDER_KEY",
+            authDomain: "flipfocus-iot.firebaseapp.com",
+            databaseURL: "https://flipfocus-iot-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "flipfocus-iot",
+            storageBucket: "flipfocus-iot.firebasestorage.app",
+            messagingSenderId: "622810947515",
+            appId: "1:622810947515:web:3f8d33646c994e1e45ee9e"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let currentListenerRef = null;
+
+        // Custom time formatter: converts seconds to clean structured HTML (e.g. 1h 24m 5s)
+        function formatTime(seconds) {
+            if (seconds === undefined || seconds === null) {
+                return '<span class="val">0</span><span class="lbl">s</span>';
+            }
+            const sec = parseInt(seconds, 10);
+            if (isNaN(sec) || sec <= 0) {
+                return '<span class="val">0</span><span class="lbl">s</span>';
+            }
+
+            const h = Math.floor(sec / 3600);
+            const m = Math.floor((sec % 3600) / 60);
+            const s = sec % 60;
+
+            let html = "";
+            if (h > 0) {
+                html += `<span class="val">${h}</span><span class="lbl">h</span>`;
+            }
+            if (m > 0) {
+                html += `<span class="val">${m}</span><span class="lbl">m</span>`;
+            }
+            if (s > 0 || (h === 0 && m === 0)) {
+                html += `<span class="val">${s}</span><span class="lbl">s</span>`;
+            }
+
+            return html;
+        }
+
+        function viewModeChanged() {
+            const selector = document.getElementById('time-frame');
+            const choice = selector.value;
+
+            const statusIndicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('status-text');
+
+            if (currentListenerRef) {
+                currentListenerRef.off();
+            }
+
+            if (choice === 'live') {
+                statusIndicator.className = "status-dot";
+                statusText.innerHTML = "Mode: <strong>Live Tracking Stream</strong>";
+
+                currentListenerRef = database.ref('/profiles');
+                currentListenerRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        updateCardMetrics({
+                            assignment: data.assignment,
+                            examprep: data.examprep,
+                            corecoding: data.corecoding,
+                            totalbreak: data.totalbreak
+                        });
+                        highlightActiveCard(data.activeZone);
+                    }
+                });
+            } else {
+                statusIndicator.className = "status-dot historical";
+                statusText.innerHTML = `Viewing Log: <strong>Archive (${choice})</strong>`;
+
+                currentListenerRef = database.ref(`/profiles/history/${choice}`);
+                currentListenerRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+
+                    if (!data) {
+                        updateCardMetrics({ assignment: 0, examprep: 0, corecoding: 0, totalbreak: 0 });
+                    } else {
+                        updateCardMetrics(data);
+                    }
+                    highlightActiveCard(null);
+                });
+            }
+        }
+
+        function updateCardMetrics(nodeData) {
+            document.getElementById('time-1').innerHTML = formatTime(nodeData.assignment);
+            document.getElementById('time-2').innerHTML = formatTime(nodeData.examprep);
+            document.getElementById('time-3').innerHTML = formatTime(nodeData.corecoding);
+            document.getElementById('time-4').innerHTML = formatTime(nodeData.totalbreak);
+        }
+
+        function highlightActiveCard(activeZoneIndex) {
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`card-${i}`).classList.remove('active');
+            }
+            if (activeZoneIndex) {
+                const targetCard = document.getElementById(`card-${activeZoneIndex}`);
+                if (targetCard) targetCard.classList.add('active');
+            }
+        }
+
+        viewModeChanged();
+    </script>
 </body>
+
 </html>
