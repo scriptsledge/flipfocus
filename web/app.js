@@ -5,7 +5,8 @@ const firebaseConfig = {
     projectId: "flipfocus-iot",
     storageBucket: "flipfocus-iot.firebasestorage.app",
     messagingSenderId: "622810947515",
-    appId: "1:622810947515:web:3f8d33646c994e1e45ee9e"
+    appId: "1:622810947515:web:dfab252ddf70ae7645ee9e",
+    measurementId: "G-1MDGH7KKV7"
 };
 
 firebase.initializeApp(firebaseConfig);
