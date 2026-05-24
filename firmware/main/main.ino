@@ -1,20 +1,18 @@
-// !!! WARNING: DO NOT COMMIT THIS FILE TO GITHUB !!!
-// It contains your real WiFi and Firebase credentials.
-
 #include <WiFi.h>
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <Firebase_ESP_Client.h>
 
+// Secret credentials - THIS FILE IS NOT COMMITTED TO GITHUB
+#include "arduino_secrets.h"
+
+// Provide useful error messages if secrets are missing
+#ifndef WIFI_SSID
+  #error "Please create an arduino_secrets.h file with your WIFI_SSID, WIFI_PASSWORD, API_KEY and DATABASE_URL"
+#endif
+
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
-
-// --- CONFIGURATION: Replace with your actual credentials ---
-#define WIFI_SSID "YOUR_WIFI_SSID"
-#define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
-#define API_KEY "YOUR_FIREBASE_API_KEY"
-#define DATABASE_URL "YOUR_DATABASE_URL"
-// -----------------------------------------------------------
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
@@ -145,6 +143,6 @@ void pushMetricsToCloud() {
     Firebase.RTDB.setInt(&fbdo, "/profiles/examprep", liveZoneTime[2]);
     Firebase.RTDB.setInt(&fbdo, "/profiles/corecoding", liveZoneTime[3]);
     Firebase.RTDB.setInt(&fbdo, "/profiles/totalbreak", liveZoneTime[4]);
-    Firebase.RTDB.setInt(&fbdo, "/profiles/activeZone", currentZone);
+    Firebase.RTDB.setInt(&fbdo, "/profiles, activeZone", currentZone);
   }
 }

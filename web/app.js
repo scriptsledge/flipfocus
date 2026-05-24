@@ -13,6 +13,25 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 let currentListenerRef = null;
 
+// Ensure we have an identity before trying to read data
+function initializeAuth() {
+    if (firebaseConfig.apiKey === "__FIREBASE_API_KEY__") {
+        console.error("CRITICAL ERROR: Firebase API Key is missing. Check your Vercel Environment Variables!");
+        document.getElementById('status-text').innerHTML = '❌ <strong>Configuration Error</strong> (Missing API Key)';
+        return;
+    }
+
+    firebase.auth().signInAnonymously()
+        .then(() => {
+            console.log("Authenticated anonymously. Ready to sync.");
+            viewModeChanged();
+        })
+        .catch((error) => {
+            console.error("Authentication failed:", error.code, error.message);
+            document.getElementById('status-text').innerHTML = '❌ <strong>Auth Error</strong> (Check Firebase Rules)';
+        });
+}
+
 function formatTime(seconds) {
     if (seconds === undefined || seconds === null) {
         return '<span class="val">0</span><span class="lbl">s</span>';
@@ -75,8 +94,11 @@ function viewModeChanged() {
         statusText.innerHTML = 'Mode: <strong>Live Tracking Stream</strong>';
 
         currentListenerRef = database.ref('/profiles');
+        console.log("Subscribing to live updates at /profiles...");
+        
         currentListenerRef.on('value', (snapshot) => {
             const data = snapshot.val();
+            console.log("Live Data Received:", data);
             if (data) {
                 updateCardMetrics({
                     assignment: data.assignment,
@@ -86,20 +108,27 @@ function viewModeChanged() {
                 });
                 highlightActiveCard(data.activeZone);
             }
+        }, (error) => {
+            console.error("Firebase Live Sync Error:", error);
         });
     } else {
         statusIndicator.className = 'status-dot historical';
         statusText.innerHTML = `Viewing Log: <strong>Archive (${choice})</strong>`;
 
         currentListenerRef = database.ref(`/profiles/history/${choice}`);
+        console.log(`Subscribing to historical logs for: ${choice}...`);
+
         currentListenerRef.on('value', (snapshot) => {
             const data = snapshot.val();
+            console.log(`Historical Data (${choice}):`, data);
             if (!data) {
                 updateCardMetrics({ assignment: 0, examprep: 0, corecoding: 0, totalbreak: 0 });
             } else {
                 updateCardMetrics(data);
             }
             highlightActiveCard(null);
+        }, (error) => {
+            console.error(`Firebase Historical Error (${choice}):`, error);
         });
     }
 }
@@ -107,5 +136,5 @@ function viewModeChanged() {
 window.addEventListener('DOMContentLoaded', () => {
     const selector = document.getElementById('time-frame');
     selector.addEventListener('change', viewModeChanged);
-    viewModeChanged();
+    initializeAuth();
 });
