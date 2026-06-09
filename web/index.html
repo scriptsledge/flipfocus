@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlipFocus | Performance Flow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FlipFocus | Dynamic Flow</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -12,24 +12,30 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root {
-            --bg-dark: #0f172a;
+            --bg-dark: #070b14;
             --primary: #38bdf8;
             --secondary: #818cf8;
             --success: #10b981;
-            --slate: #334155;
+            --slate: #1e293b;
             --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --card-border: rgba(255, 255, 255, 0.05);
-            --active-glow: rgba(56, 189, 248, 0.3);
+            --text-muted: #64748b;
+            --active-glow: rgba(56, 189, 248, 0.4);
+            --inactive-segment: #1e293b;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+        }
 
         body {
             background-color: var(--bg-dark);
             background-image: 
-                radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(129, 140, 248, 0.05) 0%, transparent 40%);
+                radial-gradient(circle at 10% 10%, rgba(56, 189, 248, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 90% 90%, rgba(129, 140, 248, 0.03) 0%, transparent 50%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
@@ -37,19 +43,35 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            padding: 20px;
+            padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom) 20px;
         }
 
-        .header { text-align: center; margin-bottom: 60px; z-index: 10; }
-        .header h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-main); margin-bottom: 4px; }
-        .header p { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; }
+        .header { 
+            text-align: center; 
+            margin-bottom: clamp(20px, 8vh, 60px); 
+            z-index: 10; 
+        }
+        .header h1 { 
+            font-size: clamp(1.8rem, 5vw, 2.8rem); 
+            font-weight: 800; 
+            letter-spacing: -0.03em; 
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px; 
+        }
+        .header p { 
+            color: var(--text-muted); 
+            font-size: clamp(0.7rem, 2vw, 0.9rem); 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            letter-spacing: 0.15em; 
+        }
 
-        .dashboard-container {
+        .dashboard-wrapper {
             position: relative;
-            width: 85vmin;
-            height: 85vmin;
-            max-width: 550px;
-            max-height: 550px;
+            width: clamp(280px, 85vmin, 580px);
+            height: clamp(280px, 85vmin, 580px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -60,7 +82,8 @@
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy fluid transition */
+            transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 2;
         }
 
         .profile-label {
@@ -77,102 +100,114 @@
 
         .label-content {
             display: inline-block;
-            padding: 10px 16px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 0.85rem;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: clamp(0.7rem, 2.5vmin, 0.85rem);
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
             transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-            background: transparent;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            border: 1px solid transparent;
         }
 
         .profile-label.active .label-content {
             color: var(--text-main);
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            box-shadow: 0 0 20px var(--active-glow);
-            transform: scale(1.1);
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            box-shadow: 0 0 30px var(--active-glow);
+            transform: scale(1.15);
         }
 
-        /* Initial positions */
-        #label-1 { transform: rotate(0deg) translateY(-42vmin); }
-        #label-2 { transform: rotate(90deg) translateY(-42vmin); }
-        #label-3 { transform: rotate(180deg) translateY(-42vmin); }
-        #label-4 { transform: rotate(270deg) translateY(-42vmin); }
+        /* Distribution on the wheel */
+        #label-1 { transform: rotate(0deg) translateY(-44vmin) translateY(clamp(-30px, -2vmin, -10px)); }
+        #label-2 { transform: rotate(90deg) translateY(-44vmin) translateY(clamp(-30px, -2vmin, -10px)); }
+        #label-3 { transform: rotate(180deg) translateY(-44vmin) translateY(clamp(-30px, -2vmin, -10px)); }
+        #label-4 { transform: rotate(270deg) translateY(-44vmin) translateY(clamp(-30px, -2vmin, -10px)); }
 
-        .chart-center {
+        .chart-container {
             position: absolute;
-            width: 70%;
-            height: 70%;
-            z-index: 5;
-            filter: drop-shadow(0 0 30px rgba(0,0,0,0.5));
+            width: 72%;
+            height: 72%;
+            z-index: 1;
+            filter: drop-shadow(0 0 40px rgba(0,0,0,0.6));
+            transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .center-info {
+        .center-display {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
             pointer-events: none;
+            z-index: 3;
         }
 
-        .center-info .time {
-            font-size: 3.5rem;
+        .center-display .time-value {
+            font-size: clamp(2.5rem, 10vmin, 4.5rem);
             font-weight: 800;
             color: var(--text-main);
-            line-height: 1;
+            line-height: 0.9;
             font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 20px rgba(0,0,0,0.4);
         }
 
-        .center-info .unit {
-            font-size: 0.8rem;
+        .center-display .unit-label {
+            font-size: clamp(0.6rem, 2vmin, 0.8rem);
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.2em;
-            margin-top: 4px;
+            letter-spacing: 0.3em;
+            margin-top: 8px;
+            font-weight: 600;
         }
 
-        .status-pill {
+        .status-bar {
             position: fixed;
-            bottom: 40px;
-            background: rgba(30, 41, 59, 0.4);
-            backdrop-filter: blur(12px);
-            padding: 12px 24px;
+            bottom: clamp(20px, 5vh, 40px);
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            padding: 10px 20px;
             border-radius: 100px;
-            border: 1px solid var(--card-border);
+            border: 1px solid rgba(255,255,255,0.08);
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 0.75rem;
+            font-weight: 700;
             color: var(--text-muted);
+            letter-spacing: 0.05em;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        .pulse-dot {
-            width: 8px;
-            height: 8px;
+        .live-dot {
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: var(--success);
-            box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
-            animation: pulse 2s infinite;
+            box-shadow: 0 0 10px var(--success);
+            animation: breathe 2s ease-in-out infinite;
         }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        @keyframes breathe {
+            0%, 100% { opacity: 0.4; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
         }
 
-        @media (max-width: 600px) {
-            .header h1 { font-size: 1.8rem; }
-            .center-info .time { font-size: 2.5rem; }
-            #label-1 { transform: rotate(0deg) translateY(-38vmin); }
-            #label-2 { transform: rotate(90deg) translateY(-38vmin); }
-            #label-3 { transform: rotate(180deg) translateY(-38vmin); }
-            #label-4 { transform: rotate(270deg) translateY(-38vmin); }
+        /* Mobile specific adjustments */
+        @media (max-height: 700px) {
+            .header { margin-bottom: 20px; }
+            .status-bar { bottom: 15px; }
+        }
+
+        @media (max-width: 480px) {
+            .profile-label { width: 110px; margin-left: -55px; }
+            .label-content { padding: 6px 12px; font-size: 0.65rem; }
+            #label-1, #label-2, #label-3, #label-4 { 
+                transform: rotate(var(--rot)) translateY(-40vmin);
+            }
         }
     </style>
 </head>
@@ -180,29 +215,30 @@
 
     <div class="header">
         <h1>FlipFocus</h1>
-        <p>Your Productivity Compass</p>
+        <p>Dynamic Flow Engine</p>
     </div>
 
-    <div class="dashboard-container">
+    <div class="dashboard-wrapper">
         <div class="wheel-outer" id="wheel">
-            <div class="profile-label" id="label-1"><div class="label-content">Assignment</div></div>
-            <div class="profile-label" id="label-2"><div class="label-content">Exam Prep</div></div>
-            <div class="profile-label" id="label-3"><div class="label-content">Core Coding</div></div>
-            <div class="profile-label" id="label-4"><div class="label-content">Break</div></div>
+            <div class="profile-label" id="label-1" style="--rot: 0deg;"><div class="label-content">Assignment</div></div>
+            <div class="profile-label" id="label-2" style="--rot: 90deg;"><div class="label-content">Exam Prep</div></div>
+            <div class="profile-label" id="label-3" style="--rot: 180deg;"><div class="label-content">Core Coding</div></div>
+            <div class="profile-label" id="label-4" style="--rot: 270deg;"><div class="label-content">Break</div></div>
         </div>
 
-        <div class="chart-center">
+        <div class="chart-container" id="chart-rotator">
             <canvas id="donutChart"></canvas>
-            <div class="center-info">
-                <div class="time" id="active-time">0</div>
-                <div class="unit">Seconds</div>
-            </div>
+        </div>
+
+        <div class="center-display">
+            <div class="time-value" id="active-time">0</div>
+            <div class="unit-label">Seconds</div>
         </div>
     </div>
 
-    <div class="status-pill">
-        <div class="pulse-dot"></div>
-        <span>LIVE STREAM ACTIVE</span>
+    <div class="status-bar">
+        <div class="live-dot"></div>
+        <span>SYNCED WITH ESP32</span>
     </div>
 
     <script>
@@ -219,25 +255,26 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
+        const THEME = {
+            colors: ['#38bdf8', '#818cf8', '#10b981', '#64748b'],
+            inactive: '#1e293b'
+        };
+
         const ctx = document.getElementById('donutChart').getContext('2d');
         const donutChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: ['Assignment', 'Exam Prep', 'Core Coding', 'Break'],
                 datasets: [{
-                    data: [0, 0, 0, 0],
-                    backgroundColor: [
-                        '#38bdf8', // Sky Blue
-                        '#818cf8', // Indigo
-                        '#10b981', // Emerald
-                        '#334155'  // Slate
-                    ],
+                    data: [1, 1, 1, 1], // Placeholder to show chart initially
+                    backgroundColor: THEME.colors,
                     borderWidth: 0,
-                    hoverOffset: 4
+                    borderRadius: 4,
+                    spacing: 8
                 }]
             },
             options: {
-                cutout: '75%', // Wider donut
+                cutout: '82%',
                 plugins: {
                     legend: { display: false },
                     tooltip: { enabled: false }
@@ -245,13 +282,14 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: {
-                    duration: 1000,
+                    duration: 1200,
                     easing: 'easeOutQuart'
                 }
             }
         });
 
         const wheel = document.getElementById('wheel');
+        const chartRotator = document.getElementById('chart-rotator');
         const labels = [
             document.getElementById('label-1'),
             document.getElementById('label-2'),
@@ -271,33 +309,34 @@
                     data.totalbreak || 0
                 ];
 
-                // Update Chart
-                donutChart.data.datasets[0].data = metrics;
+                const activeIndex = (data.activeZone || 1) - 1;
+
+                // 1. Update Chart Data & Colors
+                donutChart.data.datasets[0].data = metrics.map(v => v === 0 ? 0.01 : v); // Avoid hidden segments
+                donutChart.data.datasets[0].backgroundColor = metrics.map((_, idx) => 
+                    idx === activeIndex ? THEME.colors[idx] : THEME.inactive
+                );
                 donutChart.update();
 
-                // Handle Rotation
-                const activeIndex = (data.activeZone || 1) - 1;
-                
-                // Update active state
+                // 2. Handle Rotation (Sync Wheel and Chart)
+                const rotation = -(activeIndex * 90);
+                wheel.style.transform = `rotate(${rotation}deg)`;
+                chartRotator.style.transform = `rotate(${rotation}deg)`;
+
+                // 3. Keep text upright and handle active states
                 labels.forEach((lbl, idx) => {
+                    const content = labelContents[idx];
+                    const labelBaseRotation = idx * 90;
+                    const totalRotation = labelBaseRotation + rotation;
+                    
+                    content.style.transform = `rotate(${-totalRotation}deg)`;
+                    
                     if(idx === activeIndex) lbl.classList.add('active');
                     else lbl.classList.remove('active');
                 });
 
-                // Calculate rotation
-                const rotation = -(activeIndex * 90);
-                wheel.style.transform = `rotate(${rotation}deg)`;
-
-                // Keep text upright by counter-rotating the content
-                labelContents.forEach((content, idx) => {
-                    // Initial label offset + wheel rotation
-                    const labelBaseRotation = idx * 90;
-                    const totalRotation = labelBaseRotation + rotation;
-                    content.style.transform = `rotate(${-totalRotation}deg)`;
-                });
-
-                // Update active time display
-                activeTimeDisplay.innerText = metrics[activeIndex];
+                // 4. Update Time
+                activeTimeDisplay.innerText = Math.floor(metrics[activeIndex]);
             }
         });
     </script>
