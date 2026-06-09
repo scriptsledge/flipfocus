@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlipFocus Hub | Student Performance Logs</title>
+    <title>FlipFocus Hub | Modern Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root {
             --bg-dark: #090d16;
-            --card-bg: rgba(30, 41, 59, 0.4);
-            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #38bdf8; /* Sky Blue */
+            --success: #10b981; /* Emerald */
+            --slate: #334155;
             --text-main: #f8fafc;
             --text-muted: #64748b;
-            --primary: #38bdf8;
-            --success: #10b981;
-            --warning: #f59e0b;
+            --card-border: rgba(255, 255, 255, 0.08);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
@@ -21,121 +23,162 @@
         body {
             background-color: var(--bg-dark);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
             color: var(--text-main);
             min-height: 100vh;
-            padding: 40px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 20px;
         }
 
-        .container { width: 100%; max-width: 1100px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .header p { color: var(--text-muted); margin-top: 10px; font-size: 1.1rem; }
+        .header { text-align: center; margin-bottom: 40px; z-index: 10; }
+        .header h1 { font-size: 2.2rem; font-weight: 800; background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; }
+        .header p { color: var(--text-muted); margin-top: 8px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
 
-        .controls-panel {
+        .dashboard-container {
+            position: relative;
+            width: 90vmin;
+            height: 90vmin;
+            max-width: 600px;
+            max-height: 600px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid var(--card-border);
-            padding: 16px 30px;
-            border-radius: 20px;
-            margin-bottom: 40px;
-            backdrop-filter: blur(10px);
+            justify-content: center;
         }
 
-        .status-banner { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
-        .status-dot { width: 10px; height: 10px; background-color: var(--success); border-radius: 50%; box-shadow: 0 0 12px var(--success); }
-        .status-dot.historical { background-color: var(--warning); box-shadow: 0 0 12px var(--warning); }
+        .wheel-outer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--card-border);
+            border-radius: 50%;
+            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        .dropdown-container { display: flex; align-items: center; gap: 12px; }
-        .dropdown-container label { font-size: 0.9rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-        
-        select {
-            background: #0f172a;
+        .profile-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: center;
+            text-align: center;
+            width: 120px;
+            margin-left: -60px;
+            margin-top: -15px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: color 0.4s ease;
+        }
+
+        .profile-label.active {
+            color: var(--primary);
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+        }
+
+        /* Position labels at 0, 90, 180, 270 degrees */
+        .profile-label:nth-child(1) { transform: rotate(0deg) translateY(-40vmin); }
+        .profile-label:nth-child(2) { transform: rotate(90deg) translateY(-40vmin) rotate(-90deg); }
+        .profile-label:nth-child(3) { transform: rotate(180deg) translateY(-40vmin) rotate(-180deg); }
+        .profile-label:nth-child(4) { transform: rotate(270deg) translateY(-40vmin) rotate(-270deg); }
+
+        /* Correction for label orientation so they are always upright relative to the container, 
+           but we want them to stay in their slots. 
+           Actually, let's just rotate the whole container and rotate the labels back. */
+        .profile-label:nth-child(1) span { transform: rotate(0deg); display: inline-block; }
+        .profile-label:nth-child(2) span { transform: rotate(0deg); display: inline-block; }
+        .profile-label:nth-child(3) span { transform: rotate(0deg); display: inline-block; }
+        .profile-label:nth-child(4) span { transform: rotate(0deg); display: inline-block; }
+
+        .chart-center {
+            position: absolute;
+            width: 65%;
+            height: 65%;
+            z-index: 5;
+        }
+
+        .center-info {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .center-info .time {
+            font-size: 3rem;
+            font-weight: 800;
             color: var(--text-main);
-            border: 1px solid var(--card-border);
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            outline: none;
-            cursor: pointer;
+            line-height: 1;
         }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; width: 100%; }
-        .card { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--card-border); border-radius: 24px; padding: 30px; position: relative; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        .card h3 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); font-weight: 600; }
-        
-        .time-display { margin-top: 20px; display: flex; align-items: baseline; }
-        .time-val { font-size: 3.5rem; font-weight: 700; color: var(--text-main); line-height: 1; font-variant-numeric: tabular-nums; }
-        .unit { font-size: 1.2rem; color: var(--text-muted); margin-left: 6px; }
+        .center-info .unit {
+            font-size: 1rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
 
-        .active-badge { position: absolute; top: 24px; right: 24px; background: rgba(16, 185, 129, 0.15); color: #34d399; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; display: none; border: 1px solid rgba(16, 185, 129, 0.2); }
-        
-        .card.active { border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 20px 40px -15px rgba(56, 189, 248, 0.15); background: rgba(15, 23, 42, 0.6); transform: translateY(-4px); }
-        .card.active h3 { color: var(--primary); }
-        .card.active .active-badge { display: block; }
+        .status-indicator {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+        }
+
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); }
+
+        @media (max-width: 600px) {
+            .profile-label:nth-child(1) { transform: rotate(0deg) translateY(-38vmin); }
+            .profile-label:nth-child(2) { transform: rotate(90deg) translateY(-38vmin) rotate(-90deg); }
+            .profile-label:nth-child(3) { transform: rotate(180deg) translateY(-38vmin) rotate(-180deg); }
+            .profile-label:nth-child(4) { transform: rotate(270deg) translateY(-38vmin) rotate(-270deg); }
+            .center-info .time { font-size: 2.2rem; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <div class="header">
-            <h1>FLIPFOCUS ANALYTICS HUB</h1>
-            <p>Time-Tracking Data Logger & Historical Performance Logs</p>
+    <div class="header">
+        <h1>FLIPFOCUS</h1>
+        <p>Dynamic Productivity Flow</p>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="wheel-outer" id="wheel">
+            <div class="profile-label" id="label-1"><span>Assignment</span></div>
+            <div class="profile-label" id="label-2"><span>Exam Prep</span></div>
+            <div class="profile-label" id="label-3"><span>Core Coding</span></div>
+            <div class="profile-label" id="label-4"><span>Break</span></div>
         </div>
 
-        <div class="controls-panel">
-            <div class="status-banner">
-                <div class="status-dot" id="status-indicator"></div>
-                <span id="status-text">Mode: <strong>Live Tracking Stream</strong></span>
-            </div>
-            
-            <div class="dropdown-container">
-                <label for="time-frame">Select View:</label>
-                <select id="time-frame" onchange="viewModeChanged()">
-                    <option value="live">🔴 Live Stream (Today)</option>
-                    <option value="Monday">Monday</option>
-                    <option value="Tuesday">Tuesday</option>
-                    <option value="Wednesday">Wednesday</option>
-                    <option value="Thursday">Thursday</option>
-                    <option value="Friday">Friday</option>
-                    <option value="Saturday">Saturday</option>
-                    <option value="Sunday">Sunday</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="grid">
-            <div class="card" id="card-1">
-                <span class="active-badge">RUNNING</span>
-                <h3>1. Assignment Work</h3>
-                <div class="time-display"><span class="time-val" id="time-1">0</span><span class="unit">s</span></div>
-            </div>
-            <div class="card" id="card-2">
-                <span class="active-badge">RUNNING</span>
-                <h3>2. Exam Prep</h3>
-                <div class="time-display"><span class="time-val" id="time-2">0</span><span class="unit">s</span></div>
-            </div>
-            <div class="card" id="card-3">
-                <span class="active-badge">RUNNING</span>
-                <h3>3. Core Coding</h3>
-                <div class="time-display"><span class="time-val" id="time-3">0</span><span class="unit">s</span></div>
-            </div>
-            <div class="card" id="card-4">
-                <span class="active-badge">RUNNING</span>
-                <h3>4. Total Break</h3>
-                <div class="time-display"><span class="time-val" id="time-4">0</span><span class="unit">s</span></div>
+        <div class="chart-center">
+            <canvas id="donutChart"></canvas>
+            <div class="center-info">
+                <div class="time" id="active-time">0</div>
+                <div class="unit">Seconds</div>
             </div>
         </div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <div class="status-indicator">
+        <div class="dot"></div>
+        <span>Live System Active</span>
+    </div>
 
     <script>
         const firebaseConfig = {
@@ -150,75 +193,81 @@
         
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        
-        let currentListenerRef = null;
 
-        function viewModeChanged() {
-            const selector = document.getElementById('time-frame');
-            const choice = selector.value;
-            
-            const statusIndicator = document.getElementById('status-indicator');
-            const statusText = document.getElementById('status-text');
-
-            if (currentListenerRef) {
-                currentListenerRef.off();
+        const ctx = document.getElementById('donutChart').getContext('2d');
+        const donutChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Assignment', 'Exam Prep', 'Core Coding', 'Break'],
+                datasets: [{
+                    data: [0, 0, 0, 0],
+                    backgroundColor: [
+                        '#38bdf8', // Sky Blue
+                        '#818cf8', // Indigo
+                        '#10b981', // Emerald
+                        '#334155'  // Slate
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                cutout: '85%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                }
             }
+        });
 
-            if (choice === 'live') {
-                statusIndicator.className = "status-dot";
-                statusText.innerHTML = "Mode: <strong>Live Tracking Stream</strong>";
+        const wheel = document.getElementById('wheel');
+        const labels = [
+            document.getElementById('label-1'),
+            document.getElementById('label-2'),
+            document.getElementById('label-3'),
+            document.getElementById('label-4')
+        ];
+        const activeTimeDisplay = document.getElementById('active-time');
+
+        database.ref('/profiles').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if(data) {
+                const metrics = [
+                    data.assignment || 0,
+                    data.examprep || 0,
+                    data.corecoding || 0,
+                    data.totalbreak || 0
+                ];
+
+                // Update Chart
+                donutChart.data.datasets[0].data = metrics;
+                donutChart.update();
+
+                // Handle Rotation
+                const activeIndex = (data.activeZone || 1) - 1; // 1-based to 0-based
                 
-                currentListenerRef = database.ref('/profiles');
-                currentListenerRef.on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if(data) {
-                        // Map current data using the new naming slots
-                        updateCardMetrics({
-                            assignment: data.assignment,
-                            examprep: data.examprep,
-                            corecoding: data.corecoding,
-                            totalbreak: data.totalbreak
-                        });
-                        highlightActiveCard(data.activeZone);
-                    }
+                // Set active label styling
+                labels.forEach((lbl, idx) => {
+                    if(idx === activeIndex) lbl.classList.add('active');
+                    else lbl.classList.remove('active');
                 });
-            } else {
-                statusIndicator.className = "status-dot historical";
-                statusText.innerHTML = `Viewing Log: <strong>Archive (${choice})</strong>`;
-                
-                currentListenerRef = database.ref(`/profiles/history/${choice}`);
-                currentListenerRef.on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    
-                    // Defaults safely to 0 if a past day isn't manually seeded yet
-                    if(!data) {
-                        updateCardMetrics({ assignment: 0, examprep: 0, corecoding: 0, totalbreak: 0 });
-                    } else {
-                        updateCardMetrics(data);
-                    }
-                    highlightActiveCard(null); 
-                });
-            }
-        }
 
-        function updateCardMetrics(nodeData) {
-            document.getElementById('time-1').innerText = nodeData.assignment ?? 0;
-            document.getElementById('time-2').innerText = nodeData.examprep ?? 0;
-            document.getElementById('time-3').innerText = nodeData.corecoding ?? 0;
-            document.getElementById('time-4').innerText = nodeData.totalbreak ?? 0;
-        }
+                // Calculate rotation to put active label at top (0 degrees)
+                // Label 1 is at 0 deg, Label 2 at 90, Label 3 at 180, Label 4 at 270.
+                // To put index I at top, we rotate the wheel by - (I * 90) degrees.
+                const rotation = -(activeIndex * 90);
+                wheel.style.transform = `rotate(${rotation}deg)`;
 
-        function highlightActiveCard(activeZoneIndex) {
-            for(let i = 1; i <= 4; i++) {
-                document.getElementById(`card-${i}`).classList.remove('active');
+                // Update active time display
+                activeTimeDisplay.innerText = metrics[activeIndex];
             }
-            if(activeZoneIndex) {
-                const targetCard = document.getElementById(`card-${activeZoneIndex}`);
-                if(targetCard) targetCard.classList.add('active');
-            }
-        }
-
-        viewModeChanged();
+        });
     </script>
 </body>
 </html>
