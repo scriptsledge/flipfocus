@@ -3,28 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlipFocus Hub | Modern Analytics</title>
+    <title>FlipFocus | Performance Flow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root {
-            --bg-dark: #090d16;
-            --primary: #38bdf8; /* Sky Blue */
-            --success: #10b981; /* Emerald */
+            --bg-dark: #0f172a;
+            --primary: #38bdf8;
+            --secondary: #818cf8;
+            --success: #10b981;
             --slate: #334155;
             --text-main: #f8fafc;
-            --text-muted: #64748b;
-            --card-border: rgba(255, 255, 255, 0.08);
+            --text-muted: #94a3b8;
+            --card-border: rgba(255, 255, 255, 0.05);
+            --active-glow: rgba(56, 189, 248, 0.3);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
 
         body {
             background-color: var(--bg-dark);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.08) 0px, transparent 50%);
+                radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(129, 140, 248, 0.05) 0%, transparent 40%);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
@@ -35,16 +40,16 @@
             padding: 20px;
         }
 
-        .header { text-align: center; margin-bottom: 40px; z-index: 10; }
-        .header h1 { font-size: 2.2rem; font-weight: 800; background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 2px; }
-        .header p { color: var(--text-muted); margin-top: 8px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .header { text-align: center; margin-bottom: 60px; z-index: 10; }
+        .header h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text-main); margin-bottom: 4px; }
+        .header p { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; }
 
         .dashboard-container {
             position: relative;
-            width: 90vmin;
-            height: 90vmin;
-            max-width: 600px;
-            max-height: 600px;
+            width: 85vmin;
+            height: 85vmin;
+            max-width: 550px;
+            max-height: 550px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -54,52 +59,55 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            border: 2px solid var(--card-border);
             border-radius: 50%;
-            transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy fluid transition */
         }
 
         .profile-label {
             position: absolute;
             top: 50%;
             left: 50%;
-            transform-origin: center;
+            width: 140px;
+            margin-left: -70px;
+            margin-top: -20px;
             text-align: center;
-            width: 120px;
-            margin-left: -60px;
-            margin-top: -15px;
-            font-weight: 700;
-            font-size: 0.8rem;
+            transition: all 0.4s ease;
+            pointer-events: none;
+        }
+
+        .label-content {
+            display: inline-block;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: color 0.4s ease;
+            letter-spacing: 0.05em;
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: transparent;
         }
 
-        .profile-label.active {
-            color: var(--primary);
-            text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
+        .profile-label.active .label-content {
+            color: var(--text-main);
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            box-shadow: 0 0 20px var(--active-glow);
+            transform: scale(1.1);
         }
 
-        /* Position labels at 0, 90, 180, 270 degrees */
-        .profile-label:nth-child(1) { transform: rotate(0deg) translateY(-40vmin); }
-        .profile-label:nth-child(2) { transform: rotate(90deg) translateY(-40vmin) rotate(-90deg); }
-        .profile-label:nth-child(3) { transform: rotate(180deg) translateY(-40vmin) rotate(-180deg); }
-        .profile-label:nth-child(4) { transform: rotate(270deg) translateY(-40vmin) rotate(-270deg); }
-
-        /* Correction for label orientation so they are always upright relative to the container, 
-           but we want them to stay in their slots. 
-           Actually, let's just rotate the whole container and rotate the labels back. */
-        .profile-label:nth-child(1) span { transform: rotate(0deg); display: inline-block; }
-        .profile-label:nth-child(2) span { transform: rotate(0deg); display: inline-block; }
-        .profile-label:nth-child(3) span { transform: rotate(0deg); display: inline-block; }
-        .profile-label:nth-child(4) span { transform: rotate(0deg); display: inline-block; }
+        /* Initial positions */
+        #label-1 { transform: rotate(0deg) translateY(-42vmin); }
+        #label-2 { transform: rotate(90deg) translateY(-42vmin); }
+        #label-3 { transform: rotate(180deg) translateY(-42vmin); }
+        #label-4 { transform: rotate(270deg) translateY(-42vmin); }
 
         .chart-center {
             position: absolute;
-            width: 65%;
-            height: 65%;
+            width: 70%;
+            height: 70%;
             z-index: 5;
+            filter: drop-shadow(0 0 30px rgba(0,0,0,0.5));
         }
 
         .center-info {
@@ -112,58 +120,75 @@
         }
 
         .center-info .time {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: 800;
             color: var(--text-main);
             line-height: 1;
+            font-variant-numeric: tabular-nums;
         }
 
         .center-info .unit {
-            font-size: 1rem;
+            font-size: 0.8rem;
             color: var(--text-muted);
             text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-top: 4px;
         }
 
-        .status-indicator {
+        .status-pill {
             position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(10px);
-            padding: 10px 20px;
-            border-radius: 30px;
+            bottom: 40px;
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(12px);
+            padding: 12px 24px;
+            border-radius: 100px;
             border: 1px solid var(--card-border);
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
         }
 
-        .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 10px var(--success); }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
 
         @media (max-width: 600px) {
-            .profile-label:nth-child(1) { transform: rotate(0deg) translateY(-38vmin); }
-            .profile-label:nth-child(2) { transform: rotate(90deg) translateY(-38vmin) rotate(-90deg); }
-            .profile-label:nth-child(3) { transform: rotate(180deg) translateY(-38vmin) rotate(-180deg); }
-            .profile-label:nth-child(4) { transform: rotate(270deg) translateY(-38vmin) rotate(-270deg); }
-            .center-info .time { font-size: 2.2rem; }
+            .header h1 { font-size: 1.8rem; }
+            .center-info .time { font-size: 2.5rem; }
+            #label-1 { transform: rotate(0deg) translateY(-38vmin); }
+            #label-2 { transform: rotate(90deg) translateY(-38vmin); }
+            #label-3 { transform: rotate(180deg) translateY(-38vmin); }
+            #label-4 { transform: rotate(270deg) translateY(-38vmin); }
         }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>FLIPFOCUS</h1>
-        <p>Dynamic Productivity Flow</p>
+        <h1>FlipFocus</h1>
+        <p>Your Productivity Compass</p>
     </div>
 
     <div class="dashboard-container">
         <div class="wheel-outer" id="wheel">
-            <div class="profile-label" id="label-1"><span>Assignment</span></div>
-            <div class="profile-label" id="label-2"><span>Exam Prep</span></div>
-            <div class="profile-label" id="label-3"><span>Core Coding</span></div>
-            <div class="profile-label" id="label-4"><span>Break</span></div>
+            <div class="profile-label" id="label-1"><div class="label-content">Assignment</div></div>
+            <div class="profile-label" id="label-2"><div class="label-content">Exam Prep</div></div>
+            <div class="profile-label" id="label-3"><div class="label-content">Core Coding</div></div>
+            <div class="profile-label" id="label-4"><div class="label-content">Break</div></div>
         </div>
 
         <div class="chart-center">
@@ -175,9 +200,9 @@
         </div>
     </div>
 
-    <div class="status-indicator">
-        <div class="dot"></div>
-        <span>Live System Active</span>
+    <div class="status-pill">
+        <div class="pulse-dot"></div>
+        <span>LIVE STREAM ACTIVE</span>
     </div>
 
     <script>
@@ -208,11 +233,11 @@
                         '#334155'  // Slate
                     ],
                     borderWidth: 0,
-                    hoverOffset: 10
+                    hoverOffset: 4
                 }]
             },
             options: {
-                cutout: '85%',
+                cutout: '75%', // Wider donut
                 plugins: {
                     legend: { display: false },
                     tooltip: { enabled: false }
@@ -233,6 +258,7 @@
             document.getElementById('label-3'),
             document.getElementById('label-4')
         ];
+        const labelContents = labels.map(l => l.querySelector('.label-content'));
         const activeTimeDisplay = document.getElementById('active-time');
 
         database.ref('/profiles').on('value', (snapshot) => {
@@ -250,19 +276,25 @@
                 donutChart.update();
 
                 // Handle Rotation
-                const activeIndex = (data.activeZone || 1) - 1; // 1-based to 0-based
+                const activeIndex = (data.activeZone || 1) - 1;
                 
-                // Set active label styling
+                // Update active state
                 labels.forEach((lbl, idx) => {
                     if(idx === activeIndex) lbl.classList.add('active');
                     else lbl.classList.remove('active');
                 });
 
-                // Calculate rotation to put active label at top (0 degrees)
-                // Label 1 is at 0 deg, Label 2 at 90, Label 3 at 180, Label 4 at 270.
-                // To put index I at top, we rotate the wheel by - (I * 90) degrees.
+                // Calculate rotation
                 const rotation = -(activeIndex * 90);
                 wheel.style.transform = `rotate(${rotation}deg)`;
+
+                // Keep text upright by counter-rotating the content
+                labelContents.forEach((content, idx) => {
+                    // Initial label offset + wheel rotation
+                    const labelBaseRotation = idx * 90;
+                    const totalRotation = labelBaseRotation + rotation;
+                    content.style.transform = `rotate(${-totalRotation}deg)`;
+                });
 
                 // Update active time display
                 activeTimeDisplay.innerText = metrics[activeIndex];
