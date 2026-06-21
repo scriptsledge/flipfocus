@@ -3,13 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FlipFocus | Dynamic Flow</title>
+    <title>FlipFocus | Local USB Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         :root {
             --bg-dark: #070b14;
@@ -42,7 +40,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Use space-between for better vertical distribution */
             justify-content: space-around;
             overflow: hidden;
             padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom) 20px;
@@ -53,7 +50,6 @@
         .header { 
             text-align: center; 
             z-index: 10;
-            /* Remove rigid margin, let body flex handle it */
             margin: 10px 0;
             padding-top: 10px;
         }
@@ -76,13 +72,12 @@
 
         .dashboard-wrapper {
             position: relative;
-            /* Adjusted sizing to prevent header collision */
             width: clamp(260px, 75vmin, 540px);
             height: clamp(260px, 75vmin, 540px);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: auto 0; /* Push it towards center of remaining space */
+            margin: auto 0;
         }
 
         .wheel-outer {
@@ -129,7 +124,6 @@
             transform: scale(1.1);
         }
 
-        /* Responsive radius based on wrapper size */
         #label-1 { transform: rotate(0deg) translateY(-38vmin) translateY(-10px); }
         #label-2 { transform: rotate(90deg) translateY(-38vmin) translateY(-10px); }
         #label-3 { transform: rotate(180deg) translateY(-38vmin) translateY(-10px); }
@@ -177,7 +171,7 @@
             backdrop-filter: blur(20px);
             padding: 8px 18px;
             border-radius: 100px;
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -188,14 +182,21 @@
             margin-bottom: 10px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             z-index: 10;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .status-bar:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            background: rgba(15, 23, 42, 0.9);
         }
 
         .live-dot {
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: var(--success);
-            box-shadow: 0 0 10px var(--success);
+            background: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
             animation: breathe 2s ease-in-out infinite;
         }
 
@@ -219,7 +220,6 @@
             opacity: 1;
         }
 
-        /* Landscape Mobile Fix: Prevents UI from being cut off */
         @media (max-height: 500px) and (orientation: landscape) {
             body { justify-content: space-around; padding: 5px; }
             .header { margin: 0; }
@@ -241,7 +241,7 @@
 
     <div class="header">
         <h1>FlipFocus</h1>
-        <p>Dynamic Flow Engine</p>
+        <p>Local USB Dashboard</p>
     </div>
 
     <div class="dashboard-wrapper">
@@ -262,27 +262,14 @@
         </div>
     </div>
 
-    <div class="status-bar">
-        <div class="live-dot"></div>
-        <span>SYNCED WITH ESP32</span>
+    <div class="status-bar" id="connect-btn">
+        <div class="live-dot" id="status-dot"></div>
+        <span id="status-text">CLICK TO CONNECT USB</span>
     </div>
 
-    <a href="local.html" class="mode-link">🔌 Switch to Local USB Mode</a>
+    <a href="index.html" class="mode-link">☁️ Switch to Cloud Sync Mode</a>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAlgqjJUeTN5f57PpcPckKxdOsLXLnXfzk",
-            authDomain: "flipfocus-iot.firebaseapp.com",
-            databaseURL: "https://flipfocus-iot-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "flipfocus-iot",
-            storageBucket: "flipfocus-iot.firebasestorage.app",
-            messagingSenderId: "622810947515",
-            appId: "1:622810947515:web:3f8d33646c994e1e45ee9e"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
         const THEME = {
             colors: ['#38bdf8', '#818cf8', '#10b981', '#64748b'],
             inactive: '#1e293b'
@@ -326,42 +313,92 @@
         ];
         const labelContents = labels.map(l => l.querySelector('.label-content'));
         const activeTimeDisplay = document.getElementById('active-time');
+        const connectBtn = document.getElementById('connect-btn');
+        const statusText = document.getElementById('status-text');
+        const statusDot = document.getElementById('status-dot');
 
-        database.ref('/profiles').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if(data) {
-                const metrics = [
-                    data.assignment || 0,
-                    data.examprep || 0,
-                    data.corecoding || 0,
-                    data.totalbreak || 0
-                ];
+        let port;
+        let reader;
 
-                const activeIndex = (data.activeZone || 1) - 1;
-
-                donutChart.data.datasets[0].data = metrics.map(v => v === 0 ? 0.01 : v);
-                donutChart.data.datasets[0].backgroundColor = metrics.map((_, idx) => 
-                    idx === activeIndex ? THEME.colors[idx] : THEME.inactive
-                );
-                donutChart.update();
-
-                const rotation = -(activeIndex * 90);
-                wheel.style.transform = `rotate(${rotation}deg)`;
-                chartRotator.style.transform = `rotate(${rotation}deg)`;
-
-                labels.forEach((lbl, idx) => {
-                    const content = labelContents[idx];
-                    const labelBaseRotation = idx * 90;
-                    const totalRotation = labelBaseRotation + rotation;
-                    content.style.transform = `rotate(${-totalRotation}deg)`;
-                    
-                    if(idx === activeIndex) lbl.classList.add('active');
-                    else lbl.classList.remove('active');
-                });
-
-                activeTimeDisplay.innerText = Math.floor(metrics[activeIndex]);
+        async function connect() {
+            try {
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 115200 });
+                
+                statusText.innerText = "USB CONNECTED";
+                statusDot.style.background = "#10b981";
+                statusDot.style.boxShadow = "0 0 10px #10b981";
+                
+                readLoop();
+            } catch (e) {
+                console.error(e);
+                statusText.innerText = "CONNECTION FAILED";
+                statusDot.style.background = "#ef4444";
+                statusDot.style.boxShadow = "0 0 10px #ef4444";
             }
-        });
+        }
+
+        async function readLoop() {
+            const textDecoder = new TextDecoderStream();
+            const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+            const inputStream = textDecoder.readable;
+            reader = inputStream.getReader();
+
+            let buffer = "";
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                
+                buffer += value;
+                const lines = buffer.split("\n");
+                buffer = lines.pop();
+
+                for (const line of lines) {
+                    try {
+                        const data = JSON.parse(line.trim());
+                        updateUI(data);
+                    } catch (e) {
+                        // Incomplete JSON or noise
+                    }
+                }
+            }
+        }
+
+        function updateUI(data) {
+            const metrics = [
+                data.assignment || 0,
+                data.examprep || 0,
+                data.corecoding || 0,
+                data.totalbreak || 0
+            ];
+
+            const activeIndex = (data.activeZone || 1) - 1;
+
+            donutChart.data.datasets[0].data = metrics.map(v => v === 0 ? 0.01 : v);
+            donutChart.data.datasets[0].backgroundColor = metrics.map((_, idx) => 
+                idx === activeIndex ? THEME.colors[idx] : THEME.inactive
+            );
+            donutChart.update();
+
+            const rotation = -(activeIndex * 90);
+            wheel.style.transform = `rotate(${rotation}deg)`;
+            chartRotator.style.transform = `rotate(${rotation}deg)`;
+
+            labels.forEach((lbl, idx) => {
+                const content = labelContents[idx];
+                const labelBaseRotation = idx * 90;
+                const totalRotation = labelBaseRotation + rotation;
+                content.style.transform = `rotate(${-totalRotation}deg)`;
+                
+                if(idx === activeIndex) lbl.classList.add('active');
+                else lbl.classList.remove('active');
+            });
+
+            activeTimeDisplay.innerText = Math.floor(metrics[activeIndex]);
+        }
+
+        connectBtn.addEventListener('click', connect);
     </script>
 </body>
 </html>

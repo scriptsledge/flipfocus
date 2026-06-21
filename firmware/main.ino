@@ -130,16 +130,29 @@ void loop() {
 }
 
 void pushMetricsToCloud() {
-  if (Firebase.ready() && signupOK) {
-    unsigned long currentTime = millis();
-    unsigned long dynamicDuration = (currentTime - zoneStartTime) / 1000;
-    
-    unsigned long liveZoneTime[5];
-    for(int i = 1; i <= 4; i++) {
-      liveZoneTime[i] = accumulatedTime[i];
-    }
-    liveZoneTime[currentZone] += dynamicDuration;
+  unsigned long currentTime = millis();
+  unsigned long dynamicDuration = (currentTime - zoneStartTime) / 1000;
+  
+  unsigned long liveZoneTime[5];
+  for(int i = 1; i <= 4; i++) {
+    liveZoneTime[i] = accumulatedTime[i];
+  }
+  liveZoneTime[currentZone] += dynamicDuration;
 
+  // Always output metrics to Serial for local USB monitoring
+  Serial.print("{\"assignment\":");
+  Serial.print(liveZoneTime[1]);
+  Serial.print(",\"examprep\":");
+  Serial.print(liveZoneTime[2]);
+  Serial.print(",\"corecoding\":");
+  Serial.print(liveZoneTime[3]);
+  Serial.print(",\"totalbreak\":");
+  Serial.print(liveZoneTime[4]);
+  Serial.print(",\"activeZone\":");
+  Serial.print(currentZone);
+  Serial.println("}");
+
+  if (Firebase.ready() && signupOK) {
     // Maps directly to our dashboard structure paths
     Firebase.RTDB.setInt(&fbdo, "/profiles/assignment", liveZoneTime[1]);
     Firebase.RTDB.setInt(&fbdo, "/profiles/examprep", liveZoneTime[2]);
