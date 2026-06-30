@@ -41,7 +41,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-around;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom) 20px;
         }
 
@@ -60,7 +61,7 @@
             background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 2px; 
+            margin-bottom: 12px; 
         }
         .header p { 
             color: var(--text-muted); 
@@ -72,70 +73,20 @@
 
         .dashboard-wrapper {
             position: relative;
-            width: clamp(260px, 75vmin, 540px);
-            height: clamp(260px, 75vmin, 540px);
+            width: clamp(240px, 60vmin, 380px);
+            height: clamp(240px, 60vmin, 380px);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: auto 0;
+            margin: 20px 0;
         }
-
-        .wheel-outer {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-            z-index: 2;
-        }
-
-        .profile-label {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 140px;
-            margin-left: -70px;
-            margin-top: -15px;
-            text-align: center;
-            transition: all 0.4s ease;
-            pointer-events: none;
-        }
-
-        .label-content {
-            display: inline-block;
-            padding: clamp(4px, 1vh, 8px) clamp(10px, 2vh, 16px);
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: clamp(0.65rem, 2vmin, 0.8rem);
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-            background: rgba(15, 23, 42, 0.4);
-            backdrop-filter: blur(4px);
-            border: 1px solid transparent;
-        }
-
-        .profile-label.active .label-content {
-            color: var(--text-main);
-            background: rgba(56, 189, 248, 0.15);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            box-shadow: 0 0 30px var(--active-glow);
-            transform: scale(1.1);
-        }
-
-        #label-1 { transform: rotate(0deg) translateY(-38vmin) translateY(-10px); }
-        #label-2 { transform: rotate(90deg) translateY(-38vmin) translateY(-10px); }
-        #label-3 { transform: rotate(180deg) translateY(-38vmin) translateY(-10px); }
-        #label-4 { transform: rotate(270deg) translateY(-38vmin) translateY(-10px); }
 
         .chart-container {
             position: absolute;
-            width: 78%;
-            height: 78%;
+            width: 100%;
+            height: 100%;
             z-index: 1;
-            filter: drop-shadow(0 0 40px rgba(0,0,0,0.6));
-            transition: transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 0 30px rgba(56, 189, 248, 0.05));
         }
 
         .center-display {
@@ -146,23 +97,38 @@
             text-align: center;
             pointer-events: none;
             z-index: 3;
+            width: 70%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .active-profile-name {
+            font-size: clamp(0.7rem, 2vw, 0.95rem);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--primary);
+            margin-bottom: 8px;
+            transition: color 0.3s ease;
         }
 
         .center-display .time-value {
-            font-size: clamp(2rem, 12vmin, 4rem);
+            font-size: clamp(2.2rem, 8vw, 3.8rem);
             font-weight: 800;
             color: var(--text-main);
-            line-height: 0.9;
+            line-height: 1;
             font-variant-numeric: tabular-nums;
             text-shadow: 0 0 20px rgba(0,0,0,0.4);
         }
 
         .center-display .unit-label {
-            font-size: clamp(0.55rem, 1.8vmin, 0.75rem);
+            font-size: clamp(0.55rem, 1.5vw, 0.7rem);
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.25em;
-            margin-top: 6px;
+            margin-top: 4px;
             font-weight: 600;
         }
 
@@ -220,12 +186,14 @@
             opacity: 1;
         }
 
+        /* Landscape Mobile Fix: Prevents UI from being cut off */
         @media (max-height: 500px) and (orientation: landscape) {
             body { justify-content: space-around; padding: 5px; }
             .header { margin: 0; }
             .header h1 { font-size: 1.5rem; }
-            .dashboard-wrapper { height: 60vh; width: 60vh; }
+            .dashboard-wrapper { height: 50vh; width: 50vh; margin: 5px 0; }
             .status-bar { margin-bottom: 5px; padding: 5px 15px; }
+            .control-panel { padding: 10px 15px; margin: 5px 0; }
         }
 
         @media (max-width: 480px) {
@@ -235,30 +203,175 @@
                 transform: rotate(var(--rot)) translateY(-38vmin);
             }
         }
+
+        .control-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 15px 20px;
+            width: clamp(260px, 85vw, 420px);
+            margin: 15px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            z-index: 10;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+        }
+
+        .timer-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .timer-display {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.05em;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .timer-btn {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: var(--primary);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .timer-btn:hover {
+            background: var(--primary);
+            color: var(--bg-dark);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .timer-presets {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .preset-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preset-btn:hover, .preset-btn.active {
+            border-color: var(--secondary);
+            color: var(--text-main);
+            background: rgba(129, 140, 248, 0.1);
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            color: var(--bg-dark);
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+        }
+        
+        .action-btn:active {
+            transform: translateY(1px);
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 900px;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        @media (min-width: 768px), (max-height: 500px) and (orientation: landscape) {
+            .main-content {
+                flex-direction: row;
+                gap: 50px;
+                margin: auto 0;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="header">
         <h1>FlipFocus</h1>
-        <p>Local USB Dashboard</p>
+        <p>Smart Productivity Tracker (Local USB)</p>
     </div>
 
-    <div class="dashboard-wrapper">
-        <div class="wheel-outer" id="wheel">
-            <div class="profile-label" id="label-1" style="--rot: 0deg;"><div class="label-content">Assignment</div></div>
-            <div class="profile-label" id="label-2" style="--rot: 90deg;"><div class="label-content">Exam Prep</div></div>
-            <div class="profile-label" id="label-3" style="--rot: 180deg;"><div class="label-content">Core Coding</div></div>
-            <div class="profile-label" id="label-4" style="--rot: 270deg;"><div class="label-content">Break</div></div>
+    <div class="main-content">
+        <div class="dashboard-wrapper">
+            <div class="chart-container">
+                <canvas id="donutChart"></canvas>
+            </div>
+
+            <div class="center-display">
+                <div class="active-profile-name" id="active-profile-name">SELECT PROFILE</div>
+                <div class="time-value" id="active-time">0</div>
+                <div class="unit-label">Seconds</div>
+            </div>
         </div>
 
-        <div class="chart-container" id="chart-rotator">
-            <canvas id="donutChart"></canvas>
-        </div>
-
-        <div class="center-display">
-            <div class="time-value" id="active-time">0</div>
-            <div class="unit-label">Seconds</div>
+        <!-- Interactive Control Panel -->
+        <div class="control-panel">
+            <div class="timer-section">
+                <div class="timer-display" id="timer-text">25:00</div>
+                <div class="timer-controls">
+                    <button class="timer-btn" id="timer-start">▶ Start</button>
+                    <button class="timer-btn" id="timer-reset">↺ Reset</button>
+                </div>
+                <div class="timer-presets">
+                    <button class="preset-btn active" data-time="1500" id="preset-25m">25m</button>
+                    <button class="preset-btn" data-time="3000" id="preset-50m">50m</button>
+                    <button class="preset-btn" data-time="5" id="preset-5s">5s</button>
+                    <button class="preset-btn" data-time="10" id="preset-10s">10s</button>
+                    <button class="preset-btn" id="custom-preset-btn">✎ Custom</button>
+                </div>
+            </div>
+            
+            <button class="action-btn" id="ping-btn">🔔 Ping Device (team: overAI)</button>
         </div>
     </div>
 
@@ -303,16 +416,9 @@
             }
         });
 
-        const wheel = document.getElementById('wheel');
-        const chartRotator = document.getElementById('chart-rotator');
-        const labels = [
-            document.getElementById('label-1'),
-            document.getElementById('label-2'),
-            document.getElementById('label-3'),
-            document.getElementById('label-4')
-        ];
-        const labelContents = labels.map(l => l.querySelector('.label-content'));
         const activeTimeDisplay = document.getElementById('active-time');
+        const activeProfileDisplay = document.getElementById('active-profile-name');
+        const profileNames = ['Assignment', 'Exam Prep', 'Core Coding', 'Break'];
         const connectBtn = document.getElementById('connect-btn');
         const statusText = document.getElementById('status-text');
         const statusDot = document.getElementById('status-dot');
@@ -381,24 +487,176 @@
             );
             donutChart.update();
 
-            const rotation = -(activeIndex * 90);
-            wheel.style.transform = `rotate(${rotation}deg)`;
-            chartRotator.style.transform = `rotate(${rotation}deg)`;
-
-            labels.forEach((lbl, idx) => {
-                const content = labelContents[idx];
-                const labelBaseRotation = idx * 90;
-                const totalRotation = labelBaseRotation + rotation;
-                content.style.transform = `rotate(${-totalRotation}deg)`;
-                
-                if(idx === activeIndex) lbl.classList.add('active');
-                else lbl.classList.remove('active');
-            });
-
+            activeProfileDisplay.innerText = profileNames[activeIndex];
+            activeProfileDisplay.style.color = THEME.colors[activeIndex];
             activeTimeDisplay.innerText = Math.floor(metrics[activeIndex]);
         }
 
         connectBtn.addEventListener('click', connect);
+
+        // Countdown Timer Logic
+        let timerSeconds = 1500; // default 25m
+        let timerInterval = null;
+        let isTimerRunning = false;
+        
+        const timerText = document.getElementById('timer-text');
+        const timerStartBtn = document.getElementById('timer-start');
+        const timerResetBtn = document.getElementById('timer-reset');
+        const presetBtns = document.querySelectorAll('.preset-btn');
+        const pingBtn = document.getElementById('ping-btn');
+        
+        function updateTimerDisplay() {
+            const m = Math.floor(timerSeconds / 60);
+            const s = timerSeconds % 60;
+            timerText.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+        
+        function startTimer() {
+            if (isTimerRunning) {
+                // Pause
+                clearInterval(timerInterval);
+                timerStartBtn.innerText = '▶ Start';
+                isTimerRunning = false;
+            } else {
+                // Start
+                timerStartBtn.innerText = '⏸ Pause';
+                isTimerRunning = true;
+                timerInterval = setInterval(() => {
+                    if (timerSeconds > 0) {
+                        timerSeconds--;
+                        updateTimerDisplay();
+                    } else {
+                        // Complete!
+                        clearInterval(timerInterval);
+                        timerStartBtn.innerText = '▶ Start';
+                        isTimerRunning = false;
+                        
+                        playAlertSound();
+                        triggerDeviceAlarm();
+                        
+                        alert("Session Completed! Focus timer finished.");
+                    }
+                }, 1000);
+            }
+        }
+        
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerStartBtn.innerText = '▶ Start';
+            const activePreset = document.querySelector('.preset-btn.active');
+            if (activePreset && activePreset.dataset.time) {
+                timerSeconds = parseInt(activePreset.dataset.time);
+            } else {
+                timerSeconds = 1500;
+            }
+            updateTimerDisplay();
+        }
+        
+        function playAlertSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                oscillator.start();
+                setTimeout(() => { oscillator.stop(); }, 500);
+            } catch (e) {
+                console.log("Audio API blocked or not supported");
+            }
+        }
+        
+        async function triggerDevicePing() {
+            if (port && port.writable) {
+                try {
+                    const encoder = new TextEncoder();
+                    const writer = port.writable.getWriter();
+                    await writer.write(encoder.encode("ping\n"));
+                    writer.releaseLock();
+                    console.log("Sent 'ping' command to ESP32 over serial.");
+                } catch(e) {
+                    console.error("Failed to write to serial port:", e);
+                }
+            } else {
+                console.warn("Serial port not connected.");
+                alert("USB device not connected. Please connect USB first!");
+            }
+        }
+
+        async function triggerDeviceAlarm() {
+            if (port && port.writable) {
+                try {
+                    const encoder = new TextEncoder();
+                    const writer = port.writable.getWriter();
+                    await writer.write(encoder.encode("alarm\n"));
+                    writer.releaseLock();
+                    console.log("Sent 'alarm' command to ESP32 over serial.");
+                } catch(e) {
+                    console.error("Failed to write to serial port:", e);
+                }
+            } else {
+                console.warn("Serial port not connected.");
+            }
+        }
+        
+        // Listeners
+        timerStartBtn.addEventListener('click', startTimer);
+        timerResetBtn.addEventListener('click', resetTimer);
+        pingBtn.addEventListener('click', triggerDevicePing);
+        
+        presetBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (e.target.id === 'custom-preset-btn') return;
+                
+                presetBtns.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                timerSeconds = parseInt(e.target.dataset.time);
+                updateTimerDisplay();
+                
+                if (isTimerRunning) {
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    timerStartBtn.innerText = '▶ Start';
+                }
+            });
+        });
+        
+        document.getElementById('custom-preset-btn').addEventListener('click', (e) => {
+            const input = prompt("Enter custom duration (e.g. '10s' for 10 seconds or '15m' for 15 minutes):");
+            if (input) {
+                let sec = 0;
+                if (input.endsWith('s')) {
+                    sec = parseInt(input.slice(0, -1));
+                } else if (input.endsWith('m')) {
+                    sec = parseInt(input.slice(0, -1)) * 60;
+                } else {
+                    sec = parseInt(input) * 60;
+                }
+                
+                if (!isNaN(sec) && sec > 0) {
+                    presetBtns.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    timerSeconds = sec;
+                    updateTimerDisplay();
+                    
+                    if (isTimerRunning) {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        timerStartBtn.innerText = '▶ Start';
+                    }
+                }
+            }
+        });
+        
+        // Init
+        updateTimerDisplay();
     </script>
 </body>
 </html>
