@@ -42,13 +42,7 @@ The ecosystem integrates an ESP32 microcontroller with a web visualizer through 
 
 ### 1. Firmware Configuration
 1. Open [firmware/main/main.ino](file:///home/pyzard/projects/flipfocus/firmware/main/main.ino) in the Arduino IDE.
-2. Create a file named `arduino_secrets.h` inside the `firmware/main/` directory:
-   ```cpp
-   #define WIFI_SSID "Your_WiFi_SSID"
-   #define WIFI_PASSWORD "Your_WiFi_Password"
-   #define API_KEY "Your_Firebase_API_Key"
-   #define DATABASE_URL "Your_Firebase_Database_URL"
-   ```
+2. In the `firmware/main/` directory, make a copy of `arduino_secrets_boilerplate.h`, rename it to `arduino_secrets.h`, and populate it with your WiFi credentials and Firebase parameters.
 3. Compile and flash the firmware to your ESP32 board.
 
 ### 2. Frontend Dashboards
