@@ -2,7 +2,7 @@
 > **A Physical IoT Productivity Tracker & Real-Time Visualization Ecosystem**
 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/scriptsledge/flipfocus)
-[![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-brightgreen?logo=vercel)](https://flipfocus.vercel.app)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-brightgreen?logo=vercel)](https://flipfocusiot.vercel.app/)
 
 FlipFocus is a physical-first user interface (PUI) designed to automate focus logging and minimize screen-based distractions. By mapping physical states on a desk accessory directly to productivity profiles, it acts as a tactile anchor for attention, helping users enter and maintain deep focus.
 
